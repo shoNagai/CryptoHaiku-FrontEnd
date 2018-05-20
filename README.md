@@ -2,6 +2,9 @@
 
 > CryptoHaiku is a new form of Japanese culture Haiku using blockchains
 
+# technology
+ERC721 + IPFS (Solidity + web3.js + truffle + nuxt.js)
+
 ## Build Setup
 
 ``` bash
