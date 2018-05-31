@@ -3,7 +3,7 @@ pragma solidity ^0.4.23;
 import "zeppelin-solidity/contracts/token/ERC721/ERC721Token.sol";
 import "./Mortal.sol";
 
-contract HaikuToken is ERC721Token, Mortal {
+contract HaikuToken is ERC721Token, Mortal, Pausable {
 
   struct Haiku {
     string content;
@@ -19,7 +19,7 @@ contract HaikuToken is ERC721Token, Mortal {
 
   }
 
-  function mint(string _content, string _uri) external returns(uint256) {
+  function mint(string _content, string _uri) external whenNotPaused returns(uint256) {
     require(msg.sender != address(0));
     require(uriToToMintAddr[_uri] == address(0));
 
