@@ -2,6 +2,7 @@ pragma solidity ^0.4.23;
 
 import "zeppelin-solidity/contracts/token/ERC721/ERC721Token.sol";
 import "./Mortal.sol";
+import "./Pausable.sol";
 
 contract HaikuToken is ERC721Token, Mortal, Pausable {
 

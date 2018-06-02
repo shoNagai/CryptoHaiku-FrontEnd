@@ -5,7 +5,6 @@
           <figure class="image" style="width: 200px;height: 300px">
             <div class="content article-body">
               <img :src="tokenImage(haiku)">
-              <p>{{ haiku.content }}</p>
             </div>
           </figure>
         </div>

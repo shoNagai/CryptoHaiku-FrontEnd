@@ -160,7 +160,10 @@ export default {
     },
     saveIpfs() {
       return new Promise((resolve) => {
-        ipfs.add(this.buffer, (err, ipfsHash) => {
+        ipfs.files.add({ 
+        path: this.file.name,
+        content: this.buffer
+        }, (err, ipfsHash) => {
           if (err) {
             console.log(err)
           } else {
