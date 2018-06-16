@@ -16,10 +16,10 @@
         </div>
         <div id="navbarMenuHeroB" class="navbar-menu"  :class="{'is-active': $store.state.menu.isMenuActive}">
           <div class="navbar-end">
-            <nuxt-link to="/allList" class="navbar-item ">All Haikus</nuxt-link>
+            <nuxt-link to="/compose" class="navbar-item ">Publish</nuxt-link>
             <nuxt-link to="/mypage" class="navbar-item ">My Haikus</nuxt-link>
-            <nuxt-link to="/compose" class="navbar-item ">Compose</nuxt-link>
-            <nuxt-link to="/contact" class="navbar-item">Contact</nuxt-link>
+            <nuxt-link to="/allList" class="navbar-item ">All Haikus</nuxt-link>
+            <!-- <nuxt-link to="/contact" class="navbar-item">Contact</nuxt-link> -->
           </div>
         </div>
       </div>

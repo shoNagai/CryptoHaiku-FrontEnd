@@ -1,15 +1,30 @@
 <template lang="html">
-  <div class="container">
+  <div class="container has-text-centered">
+    <div v-if="!isNetwork">
+      <h4 class="title is-4">Network Infomation</h4>
+      <p v-if="!isNetwork">This Network is Not Rinkeby!</p>
+      <p v-if="!isNetwork">Please check your MetaMask!</p>
+      <p v-if="contractAddress && isNetwork">This contract is deployed at {{contractAddress}}</p>
+      <p v-if="account && isNetwork">Current address: {{account}}</p>
+      <p v-if="!account && isNetwork">No accounts found</p>
+    </div>
+    <div v-if="isNetwork" class="container has-text-centered column is-12">
+      <h4 class="title is-4">My Haikus</h4>
       <div class="columns is-mobile is-multiline is-centered">
-        <div class="column is-narrow" v-for="haiku in myHaikus" :key="haiku.id">
-          <figure class="image" style="width: 200px;height: 300px">
-            <div class="content article-body">
+        <div class="column is-narrow" v-for="haiku in myHaikus" :key="haiku.tokenId">
+          <div class="card haiku-card">
+            <div class="message-header">
+              <p>#{{haiku.tokenId}}</p>
+              <button class="delete" aria-label="delete" @click="deleteHaiku(haiku.tokenId)"></button>
+            </div>
+            <div class="card-content">
               <img :src="tokenImage(haiku)">
             </div>
-          </figure>
+          </div>
         </div>
       </div>
     </div>
+  </div>
 </template>
 
 <script>
@@ -22,24 +37,19 @@ export default {
   name: 'MyHaikus',
   data() {
     return {
-      isNetwork: true,
+      isNetwork: false,
       myHaikus: [],
       message: null,
       account: null,
       contractAddress: null,
     }
   },
-  created() {
-    if (typeof web3 !== 'undefined') {
-      // Use Mist/MetaMask's provider
-      web3 = new Web3(web3.currentProvider)
-    } else {
-      // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
-      web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:8545"))
-    }
+  async mounted() {
+    web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
     HaikuToken.setProvider(web3.currentProvider)
+    const networkId = await web3.eth.net.getId();
     web3.eth.getAccounts((err, accs) => {
-      if (web3.currentProvider.publicConfigStore._state.networkVersion !== process.env.NETWORKID) {
+      if (networkId !== Number(process.env.NETWORKID)) {
         this.isNetwork = false
       } else {
         this.isNetwork = true
@@ -81,7 +91,7 @@ export default {
           "mintTime": null,
           "tokenUri": null,
         }
-        haiku.tokenId = tokenId
+        haiku.tokenId = Number(tokenId)
         haiku.content = result[0].toString()
         haiku.mintAddr = result[1].toString()
         haiku.mintTime = result[2].toString()
@@ -91,7 +101,32 @@ export default {
     },
     tokenImage (haiku) {
       return 'https://gateway.ipfs.io/ipfs/' + haiku.tokenUri
-    }
+    },
+    async deleteHaiku(tokenId) {
+      this.message = "Transaction started";
+      await HaikuToken.deployed()
+      .then((instance) => instance.burn(tokenId, { from: this.account }))
+      .then((result) => {
+        this.message = "Transaction result"
+      }).catch((e) => {
+        console.error(e)
+        this.message = "Transaction failed"
+      })
+    },
   }
 }
 </script>
+
+<style>
+.haiku-card {
+  width: 250px;
+  height: 360px;
+  margin: 5px;
+}
+.haiku-card:hover { 	
+  box-shadow: 0 15px 10px -5px rgba(0,0,0,.15),0 0 5px rgba(0,0,0,.1);
+  transform: translateY(-4px);
+  transition: 0.2s;
+  background: #fff;
+}
+</style>

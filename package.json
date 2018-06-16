@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "CryptoHaiku is a new form of Japanese culture Haiku using blockchains",
   "author": "shonagai <strawberry4062@gmail.com>",
+  "engines": {
+    "node": "9.2.0",
+    "npm": "5.6.0"
+  },
   "private": true,
   "scripts": {
     "dev": "nuxt",
@@ -10,7 +14,8 @@
     "start": "nuxt start",
     "generate": "nuxt generate",
     "lint": "eslint --ext .js,.vue --ignore-path .gitignore .",
-    "precommit": "npm run lint"
+    "precommit": "npm run lint",
+    "heroku-postbuild": "npm run build"
   },
   "dependencies": {
     "blueimp-load-image": "^2.19.0",
@@ -23,7 +28,7 @@
     "truffle-contract": "^3.0.5",
     "truffle-hdwallet-provider": "0.0.5",
     "vuexfire": "^2.3.0",
-    "web3": "^0.20.6",
+    "web3": "^1.0.0-beta.34",
     "zeppelin-solidity": "^1.9.0"
   },
   "devDependencies": {

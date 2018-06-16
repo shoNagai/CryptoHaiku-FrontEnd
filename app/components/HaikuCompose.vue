@@ -1,40 +1,68 @@
 <template lang="html">
-  <div class="container">
-    <div class="columns is-mobile is-multiline is-centered">
-      <div class="field"> 
-        <canvas id="cv1" width="480" height="480"></canvas>
-        <div class="file is-info"> <label class="file-label">
-          <input class="file-input" @change="fileChange" ref="file" type="file" name="resume">
-          <span class="file-cta">
-            <span class="file-label">Select Image</span>
-          </span>
-          </label> 
-        </div>
+  <div class="container has-text-centered">
+    <div v-if="!isNetwork">
+      <h4 class="title is-4">Network Infomation</h4>
+      <p v-if="!isNetwork">This Network is Not Rinkeby!</p>
+      <p v-if="!isNetwork">Please check your MetaMask!</p>
+      <p v-if="contractAddress && isNetwork">This contract is deployed at {{contractAddress}}</p>
+      <p v-if="account && isNetwork">Current address: {{account}}</p>
+      <p v-if="!account && isNetwork">No accounts found</p>
+    </div>
+    <div class="container has-text-centered column is-4">
+      <center v-if="isNetwork">
+        <h4 class="title is-4">Publish Your Haiku</h4>
+      </center>
+      <div v-if="message" class="content has-text-centered">
+        <div class="notification is-info">・{{message}}</div>
       </div>
-      <div class="field is-horizontal">
-        <div class="field-body">
-          <div class="field">
-            <div class="control"> <textarea class="input" name="content" id="content" v-model="content"/> </div>
+      <div v-if="errormessage" class="content has-text-centered">
+        <div class="notification is-danger">・{{errormessage}}</div>
+      </div>
+      <div>
+        <canvas id="cv1" class="haiku" width="200" height="280"></canvas>
+      </div>
+      <div v-if="isNetwork" class="field is-mobile is-multiline is-centered">
+        <div class="field is-horizontal">
+          <div class="field-body">
+            <div class="field">
+              <div class="control">
+                <textarea id="content" class="textarea" maxlength="20" placeholder="haiku...20 characters"
+                 v-model="content" rows="3" @change="convertTextToImage"></textarea>
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="field is-horizontal">
-        <div class="field-body">
+        <div class="field is-horizontal">
           <div class="field">
-            <div class="control"> <button class="button is-info" @click="insertTextDataToImage">generate</button> </div>
+            <div class="control">
+              <button v-bind:disabled="!isNetwork" class="button" @click="haikuPublish">
+                publish
+              </button>
+            </div>
           </div>
           <div class="field">
-            <div class="control"> <button class="button is-primary" @click="haikuCompose">Compose</button> </div>
+            <p class="control">
+              <button class="button" @click="clear">clear</button>
+            </p>
+          </div>
+          <div class="field">
+            <div class="file is-normal control">
+              <label class="file-label">
+                <input class="file-input" type="file" name="resume" @change="fileChange">
+                <span class="file-cta">
+                  <span class="file-label">
+                    set image
+                  </span>
+                </span>
+              </label>
+            </div>
+          </div>
+          <div class="field">
+            <p class="control">
+              <button class="button" @click="convertTextToImage">generate</button>
+            </p>
           </div>
         </div>
-      </div>
-      <div class="field is-horizontal">
-        <div class="field-body">
-          <p class="message">{{ message }}</p>
-        </div>
-      </div>
-      <div class="field is-horizontal">
-        <div class="field-body"> <a target="_blank" v-bind:href="txUrl">{{txHash}}</a> </div>
       </div>
     </div>
   </div>
@@ -53,19 +81,20 @@ const ipfsConf = {
   protocol: process.env.IPFSPROTOCOL
 }
 const ipfs = new IPFS(ipfsConf)
-const RESIZE_WIDTH = 480;
-const RESIZE_HEIGHT = 480;
+const RESIZE_WIDTH = 200;
+const RESIZE_HEIGHT = 280;
 let canvas = null;
 let ctx = null;
 export default {
   name: 'HaikuCompose',
   data() {
     return {
-      isNetwork: true,
+      isNetwork: false,
       content: null,
       txHash: null,
       txUrl: null,
       message: null,
+      errormessage: null,
       account: null,
       contractAddress: null,
       file: null,
@@ -74,17 +103,12 @@ export default {
       reader: null,
     }
   },
-  created() {
-    if (typeof web3 !== 'undefined') {
-      // Use Mist/MetaMask's provider
-      web3 = new Web3(web3.currentProvider)
-    } else {
-      // fallback - use your fallback strategy (local node / hosted node + in-dapp id mgmt / fail)
-      web3 = new Web3(new Web3.providers.HttpProvider("http://127.0.0.1:8545"))
-    }
+  async mounted() {
+    web3 = new Web3(Web3.givenProvider || "ws://localhost:8545");
     HaikuToken.setProvider(web3.currentProvider)
+    const networkId = await web3.eth.net.getId();
     web3.eth.getAccounts((err, accs) => {
-      if (web3.currentProvider.publicConfigStore._state.networkVersion !== process.env.NETWORKID) {
+      if (networkId !== Number(process.env.NETWORKID)) {
         this.isNetwork = false
       } else {
         this.isNetwork = true
@@ -103,16 +127,13 @@ export default {
         this.contractAddress = address
       })
     })
-  },
-  mounted() {
     canvas = document.getElementById("cv1");
-    ctx = canvas.getContext("2d");
-    if (screen.width < 860) {
-      canvas.width = 700 * screen.width / 860;
+    if (canvas.getContext){
+      ctx = canvas.getContext("2d");
     }
   },
   methods: {
-    async haikuCompose() {
+    async haikuPublish() {
       this.message = "Transaction started";
       await this.saveImageDataFromCanvas()
       await this.convertToBuffer()
@@ -128,8 +149,8 @@ export default {
         this.buffer = null
         this.ipfsHash = null
         this.reader = null
+        this.clear();
       }).catch((e) => {
-        // console.error(e)
         this.message = "Transaction failed"
       })
     },
@@ -160,10 +181,7 @@ export default {
     },
     saveIpfs() {
       return new Promise((resolve) => {
-        ipfs.files.add({ 
-        path: this.file.name,
-        content: this.buffer
-        }, (err, ipfsHash) => {
+        ipfs.add(this.buffer, (err, ipfsHash) => {
           if (err) {
             console.log(err)
           } else {
@@ -180,8 +198,8 @@ export default {
       }
       loadImage.parseMetaData(this.file, (data) => {
         const options = {
-          maxHeight: 1024,
-          maxWidth: 1024,
+          maxHeight: 280,
+          maxWidth: 200,
           canvas: true
         };
         if (data.exif) {
@@ -207,11 +225,15 @@ export default {
         }, options);
       });
     },
-    insertTextDataToImage() {
+    convertTextToImage() {
       var txt = document.getElementById("content");
-      ctx.font = 'bold 32px MS PGothic';
-      ctx.fillStyle = 'white';
-      this.verticalInput(ctx, txt.value, 150, 50);
+      ctx.font = "bold 25px 'HG正楷書体-PRO'";
+      if(this.file){
+        ctx.fillStyle = '#FFFFFF';
+      }else {
+        ctx.fillStyle = '#000000';
+      }
+      this.verticalInput(ctx, txt.value, 130, 40);
     },
     verticalInput(ctx, text, x, y) {
       var textList = text.split('\n');
@@ -221,7 +243,22 @@ export default {
           ctx.fillText(ch, x - lineHeight * i, y + lineHeight * j);
         });
       });
+    },
+    clear() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
     }
   }
 }
 </script>
+
+<style>
+.haiku {
+  letter-spacing: 10px;
+  margin: 5px;
+  border-style: solid;
+  border-color:rgba(66, 64, 64, 0.089);
+}
+.control {
+  margin: 3px;
+}
+</style>

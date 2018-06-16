@@ -1,4 +1,4 @@
-pragma solidity ^0.4.23;
+pragma solidity 0.4.23;
 
 import "zeppelin-solidity/contracts/token/ERC721/ERC721Token.sol";
 import "./Mortal.sol";
@@ -13,6 +13,10 @@ contract HaikuToken is ERC721Token, Mortal, Pausable {
   }
 
   Haiku[] Haikus;
+
+  event Mint(address owner, uint256 tokenId);
+
+  event Burn(address owner, uint256 tokenId);
   
   mapping (string => address) internal uriToToMintAddr;
 
@@ -36,11 +40,15 @@ contract HaikuToken is ERC721Token, Mortal, Pausable {
 
     uriToToMintAddr[_uri] = msg.sender;
 
+    emit Mint(msg.sender, tokenId);
+
     return tokenId;
   }
 
   function burn(uint256 _tokenId) external onlyOwnerOf(_tokenId) {
     super._burn(msg.sender, _tokenId);
+
+    emit Burn(msg.sender, tokenId);
   }
 
   function getAllHaikus() external view returns (uint256[]) {
