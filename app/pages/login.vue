@@ -44,15 +44,25 @@ export default {
         network: 'rinkeby',
         signer: SimpleSigner('643aab8b75b2622a363f4c607b4b7f5f7cd4b0121432094af0e7ce9f80d6dd88')
       })
-
       // Request credentials to login
       uport.requestCredentials({
-        requested: ['name', 'phone', 'country'],
+        requested: ['name','avatar'],
         notifications: true // We want this if we want to recieve credentials
+        // , verified: ['GithubUser']
       })
       .then((credentials) => {
         // Do something
         console.log(credentials)
+        // var d = new Date();
+        // var month = ['Jan', 'Feb','Mar','Apr','May','June','July','Aug','Sept','Oct','Nov', 'Dec'];
+        // uport.attestCredentials({
+        //   sub: credentials.address,
+        //   claim: {
+        //     "Event": "Ethereal Summit Conference",
+        //     "Date": month[d.getMonth()] + " " + d.getDate() + "," + d.getFullYear(),
+        //     "Details": "Proof of Attendance"
+        //   }
+        // })
       })
     }
 
