@@ -20,6 +20,11 @@
             <nuxt-link to="/mypage" class="navbar-item ">My Haikus</nuxt-link>
             <nuxt-link to="/allList" class="navbar-item ">All Haikus</nuxt-link>
             <!-- <nuxt-link to="/contact" class="navbar-item">Contact</nuxt-link> -->
+            <span class="navbar-item">
+              <a class="" @click="doLogout">
+                <span>Logout</span>
+              </a>
+            </span>
           </div>
         </div>
       </div>
@@ -29,8 +34,18 @@
 </template>
 
 <script>
+import { mapActions } from 'vuex'
+
 export default {
   methods: {
+    ...mapActions('user', ['logout']),
+    doLogout () {
+      this.logout()
+        .then(() => {
+          this.$router.push('/login')
+        })
+        .catch((err) => console.log(err))
+    },
     setActive(){
       Vue.set(this.$data, 'isActive', true)
     }

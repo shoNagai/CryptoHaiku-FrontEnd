@@ -95,6 +95,7 @@ export default {
         haiku.mintAddr = result[1].toString()
         haiku.mintTime = result[2].toString()
         haiku.tokenUri = result[3].toString()
+        console.log(result[3].toString())
         this.allHaikus.push(haiku)
       })
     },

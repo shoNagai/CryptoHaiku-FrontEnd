@@ -32,7 +32,7 @@
             </div>
           </div>
         </div>
-        <div class="field is-horizontal">
+        <div class="field is-horizontal has-text-centered">
           <div class="field">
             <div class="control">
               <button v-bind:disabled="!isNetwork" class="button" @click="haikuPublish">
@@ -56,11 +56,6 @@
                 </span>
               </label>
             </div>
-          </div>
-          <div class="field">
-            <p class="control">
-              <button class="button" @click="convertTextToImage">generate</button>
-            </p>
           </div>
         </div>
       </div>
@@ -101,6 +96,7 @@ export default {
       buffer: null,
       ipfsHash: null,
       reader: null,
+      matadata: null,
     }
   },
   async mounted() {
@@ -137,8 +133,10 @@ export default {
       this.message = "Transaction started";
       await this.saveImageDataFromCanvas()
       await this.convertToBuffer()
-      await this.saveIpfs()
-      await HaikuToken.deployed().then((instance) => instance.mint(this.content, this.ipfsHash, {
+      await this.saveImageToIpfs()
+      await this.saveMatadataToIpfs();
+      const uri = `https://gateway.ipfs.io/ipfs/` + this.matadata;
+      await HaikuToken.deployed().then((instance) => instance.mint(this.content, uri, {
         from: this.account
       })).then((result) => {
         this.message = "Transaction result"
@@ -179,7 +177,7 @@ export default {
         resolve(this.buffer)
       })
     },
-    saveIpfs() {
+    saveImageToIpfs() {
       return new Promise((resolve) => {
         ipfs.add(this.buffer, (err, ipfsHash) => {
           if (err) {
@@ -187,6 +185,24 @@ export default {
           } else {
             this.ipfsHash = ipfsHash[0].hash;
             resolve(this.ipfsHash)
+          }
+        })
+      })
+    },
+    saveMatadataToIpfs() {
+      return new Promise((resolve) => {
+        let data = JSON.stringify({ 
+          name: this.content, 
+          description: this.content, 
+          image: `https://gateway.ipfs.io/ipfs/` + this.ipfsHash,
+        })
+        var buf = Buffer.from(data);
+        ipfs.add(buf, (err, matadata) => {
+          if (err) {
+            console.log(err)
+          } else {
+            this.matadata = matadata[0].hash;
+            resolve(this.matadata)
           }
         })
       })
@@ -260,5 +276,8 @@ export default {
 }
 .control {
   margin: 3px;
+}
+.title {
+  margin: 5px;
 }
 </style>

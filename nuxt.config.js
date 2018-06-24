@@ -25,7 +25,7 @@ module.exports = {
   ** Plugins to load before mounting the App
   */
   router: {
-    // middleware: 'authenticated'
+    middleware: 'authenticated'
   },
   plugins: [
   ],
